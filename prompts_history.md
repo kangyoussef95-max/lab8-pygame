@@ -26,3 +26,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 30-03-2026 14:16
 - **Prompt**: hey what are the benefits and differnces in this implemetnation betwen using a class dictionaries and tuples
 
+### 30-03-2026 14:17
+- **Prompt**: can you expliian the coed thta allows it to bounce of the borders
+

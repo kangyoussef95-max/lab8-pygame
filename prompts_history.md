@@ -38,3 +38,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 30-03-2026 14:30
 - **Prompt**: Log a journal entry for this interaction. Prompt (verbatim): "Add collisons between squares" Changes made: - Added square-to-square collision handling function in main.py using pairwise rectangle collision checks. - Implemented simple bounce response by exchanging velocity vectors on collision. - Added overlap resolution to separate colliding squares and prevent sticking. - Added get_rect helper method on Square for collision bounds. - Fixed velocity direction multiplier values from (-10, 100) to (-1, 1) to restore intended speed range. - Validated syntax with py_compile. Context and reasons: - User requested collisions between squares; overlap separation and velocity swap provide a clear and stable collision behavior for this simple simulation. CoPilot Mode: Edit Socratic Mode: ON
 
+### 30-03-2026 14:34
+- **Prompt**: how would i incrment the number of squares
+

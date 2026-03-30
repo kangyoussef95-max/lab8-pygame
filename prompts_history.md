@@ -53,3 +53,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 30-03-2026 14:39
 - **Prompt**: give me an idea of how i could add a amx speed attribute for each square which is a function of its sizer and cant exceed the global max speed
 
+### 30-03-2026 14:40
+- **Prompt**: okay i tried , can you review my code
+

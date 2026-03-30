@@ -59,3 +59,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 30-03-2026 19:56
 - **Prompt**: how about now ?
 
+### 30-03-2026 20:07
+- **Prompt**: can you get rid of collisions betwenn squares
+

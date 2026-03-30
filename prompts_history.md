@@ -68,3 +68,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 30-03-2026 20:10
 - **Prompt**: can you implement some stubs for me to fill out to add jitter
 
+### 30-03-2026 20:11
+- **Prompt**: Log a journal entry for this interaction. Prompt (verbatim): "can you implement some stubs for me to fill out to add jitter" Changes made: - Added global JITTER_ENABLED toggle constant in main.py. - Added Square.compute_jitter_delta() stub returning (0.0, 0.0) with TODO comment for user implementation. - Added Square.apply_jitter() stub that reads compute_jitter_delta() and applies velocity deltas. - Wired jitter flow into Square.update() before speed clamping. - Added spacing cleanup before main() definition. - Verified syntax with py_compile. Context and reasons: - User requested scaffolding stubs they can fill in for jitter behavior without breaking current movement. CoPilot Mode: Edit Socratic Mode: ON
+

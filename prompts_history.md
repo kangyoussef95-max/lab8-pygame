@@ -77,3 +77,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 30-03-2026 20:33
 - **Prompt**: Log a journal entry for this interaction. Prompt (verbatim): "can you review my code" Changes made: - No code changes. Performed code review of main.py. Context and reasons: - User asked for review. Findings: no critical correctness bugs; noted residual risks around frame-dependent movement, import-time pygame initialization, and performance/testing considerations. CoPilot Mode: Ask Socratic Mode: ON
 
+### 01-04-2026 22:24
+- **Prompt**: No . Just give me stubs with to dos dont implement the whole  function
+

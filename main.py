@@ -57,19 +57,43 @@ class Square:
             random.randint(50, 255),
         )
 
-    def compute_jitter_delta(self) -> tuple[float, float]:
-        """Stub: return small velocity changes to create jitter."""
-        # TODO: Replace this with your jitter logic.
-        return random.uniform(-0.2, 0.2), random.uniform(-0.2, 0.2)
+    def should_apply_jitter(self) -> bool:
+        """Stub: decide whether to jitter this frame or skip it."""
+        # TODO: Return True/False based on your strategy (every frame, or every now and then).
+        return random.random() < 0.1
+
+    def compute_jitter_rotation(self) -> float:
+        """Stub: return a small rotation angle in radians."""
+        # TODO: Return a small random angle, e.g. between -max_angle and +max_angle.
+        max_angle_degrees = 5.0
+        return math.radians(random.uniform(-max_angle_degrees, max_angle_degrees))
+
+    def rotate_velocity(self, angle_radians: float) -> None:
+        """Stub: rotate (vx, vy) by angle_radians while preserving speed."""
+        # TODO: Use a 2D rotation matrix to rotate self.vx/self.vy.
+        # vx' = vx*cos(a) - vy*sin(a)
+        # vy' = vx*sin(a) + vy*cos(a)
+        cos_a = math.cos(angle_radians)
+        sin_a = math.sin(angle_radians)
+
+        new_vx = self.vx * cos_a - self.vy * sin_a
+        new_vy = self.vx * sin_a + self.vy * cos_a
+
+        self.vx = new_vx
+        self.vy = new_vy
 
     def apply_jitter(self) -> None:
-        """Stub: apply jitter deltas to velocity before movement."""
+        """Stub: apply jitter as a small rotation of the speed vector."""
         if not JITTER_ENABLED:
             return
 
-        jitter_x, jitter_y = self.compute_jitter_delta()
-        self.vx += jitter_x
-        self.vy += jitter_y
+        # TODO: If should_apply_jitter() is True, compute angle and rotate velocity.
+        # if self.should_apply_jitter():
+        #     angle = self.compute_jitter_rotation()
+        #     self.rotate_velocity(angle)
+        if self.should_apply_jitter():
+            angle = self.compute_jitter_rotation()
+            self.rotate_velocity(angle)
 
     def clamp_speed(self) -> None:
         """Clamp total velocity magnitude so it does not exceed this square's max_speed."""

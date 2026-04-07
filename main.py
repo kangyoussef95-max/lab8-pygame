@@ -12,7 +12,7 @@ MIN_SQUARE_SIZE = 20
 MAX_SQUARE_SIZE = 70
 MIN_SPEED = 1.5
 MAX_SPEED = 7.0
-NUM_SQUARES = 100
+NUM_SQUARES = 20
 FPS = 60
 JITTER_ENABLED = True
 
@@ -124,8 +124,8 @@ class Square:
     def draw(self, surface: pygame.Surface) -> None:
         """Draw the square on the given surface."""
         pygame.draw.rect(surface, self.color, (self.x, self.y, self.size, self.size))
-
-
+    
+    
 def main() -> None:
     """Main game loop."""
     sizes = [random.randint(MIN_SQUARE_SIZE, MAX_SQUARE_SIZE) for _ in range(NUM_SQUARES)]

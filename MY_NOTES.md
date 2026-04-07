@@ -1,17 +1,3 @@
-## Goals:
-FLEEING - PHASE 1
-Flee Feature:
-⁃ Make the smaller squares flee away from the bigger ones
-⁃ All squares tend to keep a certain randomness to their behavior/ trajectory . Take the time to THINKl
-⁃ Think of strategies and how you would implement them. Find the generic and edge cases. Draw figures!
-accurate
-" Write up your thinking/ analysis in MY_NOTES. md
-Code as much as you can yourself Really do try on your own. There's lots of code in your project you might be able to reuse and modify to achieve the Flee behavior.
-s to onboard NJ
-Lists, vectors, distances etc..
-If you use Al/ CoPilot: Tame it: "Here is what I am thinking to make the smaller square.... Do not give away the full solution/ fagoritm,jus hepme leanhowto do progrestely."
-Use the Stubs & Todo. Adapt to your needs: "add extra explanations. Explain how each funiction stub relates to another"
-
 # Goals:
 ⁃ Make the smaller squares flee away from the bigger ones
 ⁃ All squares tend to keep a certain randomness to their behavior/ trajectory . 

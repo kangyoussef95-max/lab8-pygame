@@ -86,3 +86,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 07-04-2026 11:04
 - **Prompt**: sure go ahead
 
+### 08-04-2026 21:29
+- **Prompt**: Implement the stubs and to dos for the fleeing function inside main.py while basing yourself on the MY_NOTES.md file
+

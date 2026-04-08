@@ -19,3 +19,8 @@ A small square sees multiple bigger squares => combine all flee directions
 No bigger square nearby => keep normal movement and jitter
 
 # Edge Cases:
+distance == 0 => avoid divide-by-zero, use a tiny random direction
+Same size squares => no fleeing
+Flee force gets too strong => clamp speed
+Square hits a wall while fleeing => wall bounce still applies
+Many threats at once => average or limit the flee force

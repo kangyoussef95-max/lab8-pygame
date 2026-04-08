@@ -15,6 +15,8 @@ MAX_SPEED = 7.0
 NUM_SQUARES = 20
 FPS = 60
 JITTER_ENABLED = True
+FLEE_RADIUS = 150
+FLEE_STRENGTH = 0.25
 
 # Colors
 WHITE = (255, 255, 255)
@@ -103,8 +105,56 @@ class Square:
             self.vx *= scale
             self.vy *= scale
 
-    def update(self) -> None:
+    def apply_fleeing(self, all_squares: list["Square"]) -> None:
+        """Stub: push this square away from nearby larger squares."""
+        # TODO: Start accumulators from your notes.
+        # total_flee_x = 0.0
+        # total_flee_y = 0.0
+        # threat_count = 0
+
+        # TODO: Compute this square center once.
+        # center_x = self.x + self.size / 2
+        # center_y = self.y + self.size / 2
+
+        # TODO: Loop over all_squares and ignore self.
+        # for other in all_squares:
+        #     if other is self:
+        #         continue
+
+        # TODO: Same size or smaller squares are not threats.
+        # if other.size <= self.size:
+        #     continue
+
+        # TODO: Use dx, dy, distance from centers.
+        # dx = center_x - other_center_x
+        # dy = center_y - other_center_y
+        # distance = math.hypot(dx, dy)
+
+        # TODO: Only react to threats within FLEE_RADIUS.
+        # if distance > FLEE_RADIUS:
+        #     continue
+
+        # TODO (edge case): if distance == 0, use tiny random direction
+        # to avoid divide-by-zero.
+        # else normalize to get flee_x, flee_y.
+
+        # TODO: Compute size_difference and weight so closer/bigger
+        # threats influence more.
+        # size_difference = other.size - self.size
+        # proximity = 1 - (distance / FLEE_RADIUS)
+        # weight = size_difference * proximity
+
+        # TODO: Accumulate weighted flee direction and increment threat_count.
+
+        # TODO: If at least one threat was found, average/limit the flee
+        # direction and apply FLEE_STRENGTH to self.vx/self.vy.
+
+        # NOTE: clamp_speed() in update() handles the "force too strong" case.
+        return
+
+    def update(self, all_squares: list["Square"]) -> None:
         """Update the square's position and bounce off walls."""
+        self.apply_fleeing(all_squares)
         self.apply_jitter()
         self.clamp_speed()
 
@@ -145,7 +195,7 @@ def main() -> None:
                 running = False
 
         for square in squares:
-            square.update()
+            square.update(squares)
 
         screen.fill(WHITE)
         for square in squares:

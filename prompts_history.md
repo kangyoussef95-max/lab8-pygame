@@ -92,3 +92,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 08-04-2026 21:31
 - **Prompt**: Implement the stubs and to dos  for the fleeing function for me to fill out inside main.py while basing yourself on the MY_NOTES.md file
 
+### 09-04-2026 14:22
+- **Prompt**: review my implementation of the fleeing feature
+

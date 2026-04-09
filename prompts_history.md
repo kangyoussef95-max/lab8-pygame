@@ -107,3 +107,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 09-04-2026 14:57
 - **Prompt**: Can you fix the bounce of wall section of the update function
 
+### 09-04-2026 15:02
+- **Prompt**: Hey so the code is supposed to go through the list of squares, comparing distances, finding the closest threat, and then adjusting a squareâ€™s speed vector to flee away from the threat. can you implement the stubs and to dos for thhat
+

@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Explorer - main.py</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #1e1e2e;
+  --surface: #2a2a3e;
+  --surface2: #313148;
+  --text: #cdd6f4;
+  --muted: #a6adc8;
+  --accent: #89b4fa;
+  --green: #a6e3a1;
+  --yellow: #f9e2af;
+  --red: #f38ba8;
+  --mono: 'Courier New', Courier, monospace;
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; }
+a { color: var(--accent); }
+a:hover { text-decoration: underline; }
+
+header { padding: 1.5rem 2rem; border-bottom: 1px solid #3a3a55; background: var(--surface); }
+header h1 { font-size: 1.4rem; color: var(--accent); letter-spacing: -0.3px; }
+header p { color: var(--muted); font-size: 0.88rem; margin-top: 0.2rem; }
+header .file-badge { display: inline-block; background: var(--surface2); border-radius: 4px; padding: 0.1rem 0.5rem; font-family: var(--mono); font-size: 0.8rem; color: var(--yellow); margin-top: 0.3rem; }
+
+/* Tab navigation */
+.tab-nav { display: flex; padding: 0 2rem; background: var(--surface); border-bottom: 1px solid #3a3a55; flex-wrap: wrap; gap: 0; }
+.tab-btn { padding: 0.75rem 1.2rem; cursor: pointer; border: none; background: none; color: var(--muted); font-size: 0.88rem; border-bottom: 2px solid transparent; transition: all 0.18s; white-space: nowrap; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+/* Tab panels */
+.tab-panel { display: none; padding: 2rem; max-width: 1280px; margin: 0 auto; }
+.tab-panel.active { display: block; }
+
+/* Cards */
+.card { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #3a3a55; }
+.card h3 { color: var(--accent); margin-bottom: 0.6rem; font-size: 1rem; }
+
+/* Two-column */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+/* Architecture sub-tabs */
+.arch-subnav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.arch-btn { padding: 0.35rem 0.85rem; border-radius: 20px; border: 1px solid #444; background: none; color: var(--muted); cursor: pointer; font-size: 0.82rem; transition: all 0.18s; }
+.arch-btn:hover { border-color: var(--accent); color: var(--text); }
+.arch-btn.active { background: var(--accent); color: #1e1e2e; border-color: var(--accent); font-weight: 600; }
+.arch-panel { display: none; }
+.arch-panel.active { display: block; }
+
+.diag-container { background: var(--surface2); border-radius: var(--radius); padding: 1.5rem; min-height: 280px; overflow-x: auto; display: flex; justify-content: center; align-items: flex-start; }
+.diag-container svg { max-width: 100%; height: auto; }
+.diag-title { color: var(--accent); font-size: 1.05rem; font-weight: 600; margin-bottom: 0.75rem; }
+.diag-caption { color: var(--muted); font-size: 0.82rem; margin-top: 0.75rem; font-style: italic; border-left: 2px solid #444; padding-left: 0.6rem; }
+
+/* Patterns */
+.pattern-card { background: var(--surface2); border-radius: var(--radius); padding: 1.2rem; margin-bottom: 1rem; border: 1px solid #3a3a55; }
+.pattern-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.pattern-icon { font-size: 1.1rem; }
+.pattern-title { font-weight: 600; color: var(--text); font-size: 0.95rem; }
+.pattern-desc { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.75rem; }
+.pattern-layers { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.6rem; }
+.layer { font-size: 0.8rem; padding: 0.28rem 0.6rem; border-radius: 4px; line-height: 1.4; }
+.layer-basics   { background: #1e3a2a; color: #a6e3a1; }
+.layer-eng      { background: #3a2e1a; color: #f9e2af; }
+.layer-arch     { background: #1a2a3e; color: #89b4fa; }
+.layer-label    { font-weight: 700; margin-right: 0.35rem; }
+.ext-link       { display: inline-block; font-size: 0.8rem; color: var(--accent); text-decoration: none; margin-top: 0.2rem; }
+.ext-link:hover { text-decoration: underline; }
+.fix-hint       { background: #1e1e2e; border-left: 3px solid var(--yellow); padding: 0.4rem 0.7rem; border-radius: 0 4px 4px 0; font-size: 0.8rem; color: var(--text); margin-top: 0.5rem; }
+code { font-family: var(--mono); font-size: 0.85em; background: #12121e; padding: 0.05em 0.3em; border-radius: 3px; color: var(--yellow); }
+
+/* Badges */
+.badge { display: inline-block; padding: 0.18rem 0.55rem; border-radius: 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.3px; }
+.badge-high   { background: #4a1a2a; color: var(--red); }
+.badge-medium { background: #3e2e10; color: var(--yellow); }
+.badge-low    { background: #1a3220; color: var(--green); }
+.badge-score  { background: var(--surface2); color: var(--accent); font-size: 1rem; font-weight: 700; padding: 0.3rem 0.8rem; border: 1px solid var(--accent); border-radius: var(--radius); }
+
+/* Type Hints */
+.type-banner { display: flex; align-items: center; gap: 1.2rem; padding: 1.1rem 1.5rem; background: var(--surface2); border-radius: var(--radius); margin-bottom: 1.5rem; border: 1px solid #3a3a55; }
+.score-big { font-size: 2.2rem; font-weight: 800; color: var(--accent); line-height: 1; }
+.score-verdict { color: var(--muted); font-size: 0.88rem; }
+
+/* Code Review */
+.review-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.5rem; }
+@media (max-width: 800px) { .review-layout { grid-template-columns: 1fr; } }
+.review-left { background: var(--surface); border-radius: var(--radius); padding: 1.1rem; border: 1px solid #3a3a55; }
+.review-right { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; border: 1px solid #3a3a55; min-height: 320px; }
+.review-item { padding: 0.7rem 0.8rem; border-radius: 6px; cursor: pointer; margin-bottom: 0.5rem; border: 1px solid transparent; transition: all 0.15s; }
+.review-item:hover { border-color: #444; background: var(--surface2); }
+.review-item.selected { border-color: var(--accent); background: var(--surface2); }
+.ri-titlerow { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.ri-title { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+.ri-note { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+pre.snippet { background: #12121e; border-radius: 5px; padding: 0.7rem; font-size: 0.76rem; overflow-x: auto; color: #cdd6f4; font-family: var(--mono); margin: 0.6rem 0; line-height: 1.5; border: 1px solid #2a2a3e; }
+.detail-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.9rem; }
+.detail-title { color: var(--accent); font-size: 1rem; font-weight: 700; }
+.detail-body { color: var(--muted); font-size: 0.86rem; line-height: 1.65; margin-bottom: 0.9rem; }
+.hint-box { background: var(--surface2); border-left: 3px solid var(--accent); padding: 0.6rem 0.8rem; border-radius: 0 4px 4px 0; font-size: 0.84rem; color: var(--text); }
+
+/* Performance */
+.perf-card { background: var(--surface2); border-radius: var(--radius); padding: 1.2rem; margin-bottom: 1rem; border: 1px solid #3a3a55; }
+.perf-title { font-weight: 600; color: var(--text); margin-bottom: 0.4rem; }
+.perf-desc { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.5rem; }
+
+/* Next Steps */
+.ns-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.2rem; background: var(--surface2); border-radius: var(--radius); margin-bottom: 0.8rem; border: 1px solid #3a3a55; }
+.ns-num { font-size: 1.4rem; font-weight: 800; color: var(--accent); min-width: 2rem; line-height: 1.2; }
+.ns-text a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.95rem; }
+.ns-text a:hover { text-decoration: underline; }
+.ns-desc { color: var(--muted); font-size: 0.83rem; margin-top: 0.2rem; }
+
+/* Fallback */
+.fallback { background: #2a1215; color: var(--red); padding: 1rem; border-radius: 6px; font-size: 0.72rem; font-family: var(--mono); overflow-x: auto; white-space: pre-wrap; }
+
+/* Section headings */
+.section-head { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
+.section-head.green { color: var(--green); }
+.section-head.yellow { color: var(--yellow); }
+.section-head.red { color: var(--red); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Code Explorer</h1>
+  <span class="file-badge">main.py</span>
+  <p style="margin-top:0.4rem;">Project: lab8-pygame | Focus: game loop, square behavior, and data flow for first-year learners.</p>
+</header>
+
+<nav class="tab-nav">
+<button class="tab-btn active" onclick="switchTab('architecture', this)">Architecture</button>
+<button class="tab-btn" onclick="switchTab('patterns', this)">Patterns</button>
+<button class="tab-btn" onclick="switchTab('typehints', this)">Type Hints</button>
+<button class="tab-btn" onclick="switchTab('codereview', this)">Code Review</button>
+<button class="tab-btn" onclick="switchTab('performance', this)">Performance</button>
+<button class="tab-btn" onclick="switchTab('nextsteps', this)">Next Steps</button>
+</nav>
+
+<div class="tab-panel active" id="tab-architecture">
+  <div class="card">
+    <h3>Architecture Overview</h3>
+    <p>This module combines setup, simulation logic, and rendering in one file, which makes it good for learning the full loop from input to output.</p>
+  </div>
+
+  <div class="arch-subnav">
+    <button class="arch-btn active" onclick="switchArch('callgraph', this)">Call Graph</button>
+    <button class="arch-btn" onclick="switchArch('depgraph', this)">Dependency Graph</button>
+    <button class="arch-btn" onclick="switchArch('seqfull', this)">Full Sequence</button>
+    <button class="arch-btn" onclick="switchArch('seqflee', this)">Flee Sequence</button>
+    <button class="arch-btn" onclick="switchArch('seqframe', this)">Frame Sequence</button>
+    <button class="arch-btn" onclick="switchArch('datapos', this)">Position Flow</button>
+    <button class="arch-btn" onclick="switchArch('datavel', this)">Velocity Flow</button>
+    <button class="arch-btn" onclick="switchArch('datasnap', this)">Snapshot Flow</button>
+    <button class="arch-btn" onclick="switchArch('control', this)">Control Flow</button>
+  </div>
+
+  <div class="arch-panel active" id="arch-callgraph">
+    <div class="diag-title">Call Graph</div>
+    <div class="diag-container" id="diag-callgraph"></div>
+    <div class="diag-caption">The game loop creates squares once, then repeatedly updates state and draws each frame.</div>
+  </div>
+
+  <div class="arch-panel" id="arch-depgraph">
+    <div class="diag-title">Dependency Graph</div>
+    <div class="diag-container" id="diag-depgraph"></div>
+    <div class="diag-caption">This file depends on one third-party module and a few standard modules for math, randomness, and dataclasses.</div>
+  </div>
+
+  <div class="arch-panel" id="arch-seqfull">
+    <div class="diag-title">Full Runtime Sequence</div>
+    <div class="diag-container" id="diag-seqfull"></div>
+    <div class="diag-caption">This sequence shows one full frame from timing, to updates, to drawing, to display flip.</div>
+  </div>
+
+  <div class="arch-panel" id="arch-seqflee">
+    <div class="diag-title">Flee Logic Sequence</div>
+    <div class="diag-container" id="diag-seqflee"></div>
+    <div class="diag-caption">A square checks nearby bigger squares and adjusts its velocity away from the nearest threat.</div>
+  </div>
+
+  <div class="arch-panel" id="arch-seqframe">
+    <div class="diag-title">Frame Update Sequence</div>
+    <div class="diag-container" id="diag-seqframe"></div>
+    <div class="diag-caption">Velocity gets modified, clamped, then converted into position movement and wall bounces.</div>
+  </div>
+
+  <div class="arch-panel" id="arch-datapos">
+    <div class="diag-title">Data Flow: Position</div>
+    <div class="diag-container" id="diag-datapos"></div>
+    <div class="diag-caption">Position starts in construction, changes during update, then drives final drawing coordinates.</div>
+  </div>
+
+  <div class="arch-panel" id="arch-datavel">
+    <div class="diag-title">Data Flow: Velocity</div>
+    <div class="diag-container" id="diag-datavel"></div>
+    <div class="diag-caption">Velocity is initialized once, altered by fleeing and jitter, clamped, then used for movement.</div>
+  </div>
+
+  <div class="arch-panel" id="arch-datasnap">
+    <div class="diag-title">Data Flow: Snapshot List</div>
+    <div class="diag-container" id="diag-datasnap"></div>
+    <div class="diag-caption">Frame snapshots freeze each square state so update order does not affect flee behavior.</div>
+  </div>
+
+  <div class="arch-panel" id="arch-control">
+    <div class="diag-title">Control Flow State View</div>
+    <div class="diag-container" id="diag-control"></div>
+    <div class="diag-caption">The loop stays active until quit input, then exits cleanly through pygame quit.</div>
+  </div>
+</div>
+
+<div class="tab-panel" id="tab-patterns">
+  <div class="two-col">
+    <div>
+      <div class="section-head green">Good Patterns</div>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">✅</span>
+          <span class="pattern-title">Frame Snapshot Isolation</span>
+        </div>
+        <div class="pattern-desc">Using immutable snapshots before updates prevents hidden ordering bugs inside the same frame.</div>
+        <div class="pattern-layers">
+          <div class="layer layer-basics"><span class="layer-label">Basics:</span> Each square reads the same frame state.</div>
+          <div class="layer layer-eng"><span class="layer-label">Engineering Insight:</span> This makes behavior deterministic and easier to debug.</div>
+          <div class="layer layer-arch"><span class="layer-label">Architecture Insight:</span> It separates read model and write model in one tick.</div>
+        </div>
+        <a class="ext-link" href="https://en.wikipedia.org/wiki/Double_buffering" target="_blank" rel="noopener noreferrer">Read: double buffering idea</a>
+      </div>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">✅</span>
+          <span class="pattern-title">Constants For Tuning</span>
+        </div>
+        <div class="pattern-desc">Gameplay numbers are centralized at the top so students can tune behavior without touching logic internals.</div>
+        <div class="pattern-layers">
+          <div class="layer layer-basics"><span class="layer-label">Basics:</span> Important values are named and grouped.</div>
+          <div class="layer layer-eng"><span class="layer-label">Engineering Insight:</span> This cuts magic numbers and improves readability.</div>
+          <div class="layer layer-arch"><span class="layer-label">Architecture Insight:</span> Config and behavior are loosely separated.</div>
+        </div>
+        <a class="ext-link" href="https://refactoring.guru/replace-magic-number-with-symbolic-constant" target="_blank" rel="noopener noreferrer">Read: symbolic constants</a>
+      </div>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">✅</span>
+          <span class="pattern-title">Behavior Method Decomposition</span>
+        </div>
+        <div class="pattern-desc">Square behavior is split into focused methods such as flee, jitter, clamp, update, and draw.</div>
+        <div class="pattern-layers">
+          <div class="layer layer-basics"><span class="layer-label">Basics:</span> Small methods are easier to reason about.</div>
+          <div class="layer layer-eng"><span class="layer-label">Engineering Insight:</span> Unit testing each behavior becomes possible.</div>
+          <div class="layer layer-arch"><span class="layer-label">Architecture Insight:</span> The class expresses a clear behavior pipeline.</div>
+        </div>
+        <a class="ext-link" href="https://refactoring.guru/smells/long-method" target="_blank" rel="noopener noreferrer">Read: long method smell</a>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-head yellow">Potential Issues</div>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">⚠️</span>
+          <span class="pattern-title">Import Time Side Effects</span>
+        </div>
+        <div class="pattern-desc">Display setup runs at import time, which makes automated tests and module reuse harder.</div>
+        <div class="pattern-layers">
+          <div class="layer layer-basics"><span class="layer-label">Basics:</span> Importing the file already opens pygame resources.</div>
+          <div class="layer layer-eng"><span class="layer-label">Engineering Insight:</span> Tests often need pure imports without window creation.</div>
+          <div class="layer layer-arch"><span class="layer-label">Architecture Insight:</span> App bootstrap and domain logic are tightly coupled.</div>
+        </div>
+        <div class="fix-hint">Move pygame init, display setup, and clock creation into main or a bootstrap function.</div>
+      </div>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">⚠️</span>
+          <span class="pattern-title">Quadratic Flee Cost</span>
+        </div>
+        <div class="pattern-desc">Each square scans all snapshots every frame, so cost grows with square count.</div>
+        <div class="pattern-layers">
+          <div class="layer layer-basics"><span class="layer-label">Basics:</span> N squares can cause near N squared checks.</div>
+          <div class="layer layer-eng"><span class="layer-label">Engineering Insight:</span> Performance drops quickly when entity count rises.</div>
+          <div class="layer layer-arch"><span class="layer-label">Architecture Insight:</span> A spatial partition can reduce neighbor checks.</div>
+        </div>
+        <div class="fix-hint">Introduce grid buckets or quadtree indexing to inspect only nearby candidates.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-panel" id="tab-typehints">
+  <div class="type-banner">
+    <div class="score-big">4/5</div>
+    <div class="score-verdict">
+      Strong baseline type usage: function signatures are mostly annotated and generics are concrete.<br>
+      Biggest gap: instance attributes are dynamically assigned in init without class level annotations.
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="section-head green">Strengths</div>
+      <div class="pattern-card">
+        <div class="pattern-title">Annotated APIs</div>
+        <div class="pattern-desc">Methods such as update, draw, snapshot, and main provide explicit parameter and return intent.</div>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-title">Concrete Generic Types</div>
+        <div class="pattern-desc">Signatures use specific types like list of SquareSnapshot instead of untyped list.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-head red">Gaps</div>
+      <div class="pattern-card">
+        <div class="pattern-title">Attribute Type Declarations</div>
+        <div class="pattern-desc">Square attributes x y vx vy size max_speed color are inferred, not declared at class level.</div>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-title">Surface Area Consistency</div>
+        <div class="pattern-desc">Global objects like screen and clock are unannotated, which reduces static checker clarity.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-panel" id="tab-codereview">
+  <div class="review-layout">
+    <div class="review-left">
+      <div class="review-item selected" id="ri-0" onclick="selectReview(0)">
+        <div class="ri-titlerow">
+          <span class="ri-title">Import side effects</span>
+          <span class="badge badge-high">high</span>
+        </div>
+        <div class="ri-note">Pygame setup runs before main.</div>
+      </div>
+
+      <div class="review-item" id="ri-1" onclick="selectReview(1)">
+        <div class="ri-titlerow">
+          <span class="ri-title">Fleeing complexity</span>
+          <span class="badge badge-medium">medium</span>
+        </div>
+        <div class="ri-note">Per frame scan over all squares.</div>
+      </div>
+
+      <div class="review-item" id="ri-2" onclick="selectReview(2)">
+        <div class="ri-titlerow">
+          <span class="ri-title">Global constant coupling</span>
+          <span class="badge badge-medium">medium</span>
+        </div>
+        <div class="ri-note">Class behavior tied to module globals.</div>
+      </div>
+
+      <div class="review-item" id="ri-3" onclick="selectReview(3)">
+        <div class="ri-titlerow">
+          <span class="ri-title">Stub comments drift</span>
+          <span class="badge badge-low">low</span>
+        </div>
+        <div class="ri-note">Comments still say TODO after implementation.</div>
+      </div>
+
+      <div class="review-item" id="ri-4" onclick="selectReview(4)">
+        <div class="ri-titlerow">
+          <span class="ri-title">Input guard coverage</span>
+          <span class="badge badge-low">low</span>
+        </div>
+        <div class="ri-note">Some runtime assumptions remain implicit.</div>
+      </div>
+    </div>
+
+    <div class="review-right" id="review-detail-panel"></div>
+  </div>
+</div>
+
+<div class="tab-panel" id="tab-performance">
+  <div class="two-col">
+    <div>
+      <div class="section-head green">Wins</div>
+      <div class="perf-card">
+        <div class="perf-title">Time scaled movement</div>
+        <div class="perf-desc">Using delta_time normalizes behavior across different frame rates and avoids speed spikes.</div>
+      </div>
+      <div class="perf-card">
+        <div class="perf-title">Single snapshot pass</div>
+        <div class="perf-desc">The snapshot list is built once per frame and reused by all updates.</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-head red">Risks</div>
+      <div class="perf-card">
+        <div class="perf-title">Near quadratic threat checks</div>
+        <div class="perf-desc">apply_fleeing loops through every snapshot for every square each frame.</div>
+      </div>
+      <div class="perf-card">
+        <div class="perf-title">Repeated math calls in hot loop</div>
+        <div class="perf-desc">Frequent hypot and trigonometry inside update paths can become expensive at larger scales.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="display:flex; align-items:center; gap:1rem;">
+    <span class="badge-score">4 / 6</span>
+    <span>Performance is good for small classroom simulations, but scaling entity count will need spatial optimization.</span>
+  </div>
+</div>
+
+<div class="tab-panel" id="tab-nextsteps">
+  <div class="ns-item">
+    <div class="ns-num">1</div>
+    <div class="ns-text">
+      <a href="https://docs.python.org/3/library/dataclasses.html" target="_blank" rel="noopener noreferrer">Python dataclasses docs</a>
+      <div class="ns-desc">Understand why immutable snapshots are useful in frame based systems.</div>
+    </div>
+  </div>
+
+  <div class="ns-item">
+    <div class="ns-num">2</div>
+    <div class="ns-text">
+      <a href="https://www.pygame.org/docs/" target="_blank" rel="noopener noreferrer">Pygame official docs</a>
+      <div class="ns-desc">Map update and draw loop concepts to pygame API primitives.</div>
+    </div>
+  </div>
+
+  <div class="ns-item">
+    <div class="ns-num">3</div>
+    <div class="ns-text">
+      <a href="https://en.wikipedia.org/wiki/Quadtree" target="_blank" rel="noopener noreferrer">Quadtree basics</a>
+      <div class="ns-desc">Learn one practical strategy to reduce neighbor search complexity.</div>
+    </div>
+  </div>
+
+  <div class="ns-item">
+    <div class="ns-num">4</div>
+    <div class="ns-text">
+      <a href="https://docs.python.org/3/library/typing.html" target="_blank" rel="noopener noreferrer">Typing module docs</a>
+      <div class="ns-desc">Improve static feedback by adding class level attribute annotations.</div>
+    </div>
+  </div>
+
+  <div class="ns-item">
+    <div class="ns-num">5</div>
+    <div class="ns-text">
+      <a href="https://refactoring.guru/extract-method" target="_blank" rel="noopener noreferrer">Extract method pattern</a>
+      <div class="ns-desc">Apply this to split bootstrap setup from simulation logic for cleaner architecture.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// -- Tab switching --
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// -- Architecture sub-tabs --
+function switchArch(name, btn) {
+  document.querySelectorAll('.arch-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.arch-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('arch-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// -- Code Review --
+const reviewItems = [
+  {
+    id: 0,
+    title: 'Pygame bootstrap at import',
+    severity: 'high',
+    snippet: "pygame.init()\nscreen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))\nclock = pygame.time.Clock()",
+    shortNote: 'Importing this module has side effects.',
+    fullExplanation: 'Correctness and testability risk.\nWhen pygame init and display setup run at import time, tools that only import symbols still allocate graphics resources.\nThis can break headless tests and reduce reusability.',
+    improvementHint: 'Create setup_game() and call it inside main so importing stays side effect free.'
+  },
+  {
+    id: 1,
+    title: 'Quadratic fleeing loop',
+    severity: 'medium',
+    snippet: "for square in squares:\n    square.update(square_snapshots, delta_time)\n\nfor other in all_squares:\n    if other.owner is self:\n        continue",
+    shortNote: 'Behavior scales poorly with entity count.',
+    fullExplanation: 'Performance risk in hot path.\nEach square checks all snapshots each frame, so workload grows quickly with more entities.\nFor classroom scale this is fine, but larger simulations may stutter.',
+    improvementHint: 'Use a uniform grid or quadtree so each square checks only nearby threats.'
+  },
+  {
+    id: 2,
+    title: 'Global constants inside class logic',
+    severity: 'medium',
+    snippet: "if self.x + self.size >= WINDOW_WIDTH:\n    self.x = WINDOW_WIDTH - self.size",
+    shortNote: 'Domain logic depends on module level settings.',
+    fullExplanation: 'Maintainability concern.\nSquare behavior directly reads global configuration, so reusing Square in another scene requires editing globals.\nDependency injection would make behavior easier to configure and test.',
+    improvementHint: 'Pass bounds and tuning values through constructor or a settings object.'
+  },
+  {
+    id: 3,
+    title: 'TODO comments no longer true',
+    severity: 'low',
+    snippet: "def apply_jitter(self, delta_time: float) -> None:\n    \"\"\"Stub: apply jitter as a small rotation of the speed vector.\"\"\"\n    # TODO: If should_apply_jitter() is True, compute angle and rotate velocity.",
+    shortNote: 'Comment drift can confuse new readers.',
+    fullExplanation: 'Readability issue.\nThe function body is implemented, but comments still frame it as a stub.\nStudents may spend time searching for missing code that already exists.',
+    improvementHint: 'Remove stale TODO notes and keep concise comments that match current behavior.'
+  },
+  {
+    id: 4,
+    title: 'Partial guard strategy',
+    severity: 'low',
+    snippet: "if delta_time <= 0:\n    return False",
+    shortNote: 'Some assumptions are guarded, others are implicit.',
+    fullExplanation: 'Type safety and robustness note.\nThe code carefully guards edge cases in some places, like zero delta time and divide by zero size range.\nOther assumptions, such as valid dimensions and positive square counts, rely on constants staying valid.',
+    improvementHint: 'Add a startup validation function for constants and fail fast with clear messages.'
+  }
+];
+
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function selectReview(id) {
+  document.querySelectorAll('.review-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('ri-' + id).classList.add('selected');
+  const item = reviewItems[id];
+  const sevClass = 'badge-' + item.severity;
+  const body = item.fullExplanation.replace(/\n/g, '<br>');
+  document.getElementById('review-detail-panel').innerHTML = `
+    <div>
+      <div class="detail-head">
+        <span class="detail-title">${escH(item.title)}</span>
+        <span class="badge ${escH(sevClass)}">${escH(item.severity)}</span>
+      </div>
+      <div class="detail-body">${body}</div>
+      <pre class="snippet">${escH(item.snippet)}</pre>
+      <div class="hint-box">&#128161; <strong>Improvement:</strong> ${escH(item.improvementHint)}</div>
+    </div>`;
+}
+
+// -- Mermaid --
+mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+
+const diagrams = {
+  callgraph: String.raw`graph TD
+    n1["start main loop"] --> n2["create size list"]
+    n2 --> n3["build square list"]
+    n3 --> n4["read frame events"]
+    n4 --> n5["capture frame snapshots"]
+    n5 --> n6["update each square"]
+    n6 --> n7["run flee logic"]
+    n6 --> n8["run jitter logic"]
+    n6 --> n9["clamp speed value"]
+    n6 --> n10["apply wall bounce"]
+    n10 --> n11["draw all squares"]
+    n11 --> n12["flip display buffer"]
+    n12 --> n4
+    n4 --> n13["quit game loop"]
+  `,
+
+  depgraph: String.raw`graph LR
+    n1["main module"] --> n2["pygame module"]
+    n1 --> n3["math module"]
+    n1 --> n4["random module"]
+    n1 --> n5["dataclass module"]
+    click n2 href "https://www.pygame.org/docs/" "Open docs"
+    click n3 href "https://docs.python.org/3/library/math.html" "Open docs"
+    click n4 href "https://docs.python.org/3/library/random.html" "Open docs"
+    click n5 href "https://docs.python.org/3/library/dataclasses.html" "Open docs"
+  `,
+
+  seqfull: String.raw`sequenceDiagram
+    participant p1 as "main loop"
+    participant p2 as "clock timer"
+    participant p3 as "square list"
+    participant p4 as "single square"
+    participant p5 as "screen draw"
+
+    p1->>p2: compute frame delta
+    p2-->>p1: return delta time
+    p1->>p3: build frame snapshots
+    p1->>p3: update all squares
+    p3->>p4: call update method
+    p4-->>p3: return new state
+    p1->>p5: clear screen area
+    p1->>p3: draw each square
+    p3->>p5: draw rect call
+    p1->>p5: flip display buffer
+  `,
+
+  seqflee: String.raw`sequenceDiagram
+    participant p1 as "square actor"
+    participant p2 as "snapshot list"
+    participant p3 as "threat square"
+    participant p4 as "velocity state"
+
+    p1->>p2: iterate frame snapshots
+    p2->>p3: expose threat data
+    p3-->>p1: return threat size
+    p1->>p1: compute center delta
+    p1->>p1: choose flee vector
+    p1->>p4: add flee impulse
+    p4-->>p1: updated speed pair
+  `,
+
+  seqframe: String.raw`sequenceDiagram
+    participant p1 as "main loop"
+    participant p2 as "square actor"
+    participant p3 as "flee logic"
+    participant p4 as "jitter logic"
+    participant p5 as "draw system"
+
+    p1->>p2: call update frame
+    p2->>p3: apply flee force
+    p3-->>p2: return flee delta
+    p2->>p4: apply jitter turn
+    p4-->>p2: return jitter delta
+    p2->>p2: clamp speed value
+    p2->>p2: move by delta
+    p2->>p2: resolve wall bounce
+    p1->>p5: draw square frame
+    p5-->>p1: frame draw done
+  `,
+
+  datapos: String.raw`graph TD
+    n1["spawn start position"] --> n2["store square x y"]
+    n2 --> n3["apply velocity step"]
+    n3 --> n4["resolve wall bounce"]
+    n4 --> n5["clamp valid bounds"]
+    n5 --> n6["round draw values"]
+    n6 --> n7["render on screen"]
+  `,
+
+  datavel: String.raw`graph TD
+    n1["pick random angle"] --> n2["set base velocity"]
+    n2 --> n3["add flee impulse"]
+    n3 --> n4["apply jitter turn"]
+    n4 --> n5["clamp speed limit"]
+    n5 --> n6["move position step"]
+    n6 --> n7["invert on bounce"]
+  `,
+
+  datasnap: String.raw`graph TD
+    n1["loop all squares"] --> n2["capture square state"]
+    n2 --> n3["create snapshot list"]
+    n3 --> n4["pass into update"]
+    n4 --> n5["read in flee check"]
+    n5 --> n6["keep frame stable"]
+  `,
+
+  control: String.raw`stateDiagram-v2
+    n1: init game state
+    n2: run frame cycle
+    n3: read input events
+    n4: update square logic
+    n5: render frame output
+    n6: quit application
+
+    [*] --> n1
+    n1 --> n2
+    n2 --> n3
+    n3 --> n4
+    n4 --> n5
+    n5 --> n2
+    n3 --> n6
+    n6 --> [*]
+  `
+};
+
+let renderCounter = 0;
+
+async function renderDiagram(key, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const source = diagrams[key];
+  if (!source) { container.innerHTML = '<p style="color:var(--muted)">No diagram source found.</p>'; return; }
+  const uid = 'mmd-' + key + '-' + (++renderCounter);
+  try {
+    const { svg, bindFunctions } = await mermaid.render(uid, source);
+    container.innerHTML = svg;
+    if (typeof bindFunctions === 'function') bindFunctions(container);
+  } catch (err) {
+    container.innerHTML = '<pre class="fallback">Render failed: ' + err.message + '\n\nSource:\n' + source + '</pre>';
+  }
+}
+
+async function renderAll() {
+  for (const [key] of Object.entries(diagrams)) {
+    await renderDiagram(key, 'diag-' + key);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  selectReview(0);
+  renderAll();
+});
+</script>
+</body>
+</html>

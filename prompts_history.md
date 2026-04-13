@@ -128,3 +128,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 13-04-2026 14:15
 - **Prompt**: Generate a complete code explorer learning site for this workspace project (lab8-pygame). Analyze the Python codebase and produce a single modern HTML dashboard with architecture overview, key module/function walkthroughs, Mermaid diagrams, data/control flow notes, and practical learning guidance suitable for a first-year student. Write the output file into the repository root with a clear name like code_explorer.html (or similarly obvious), and include any minimal supporting assets only if necessary. Ensure links and sections are self-contained and readable locally. Return: 1) exact files created/updated, 2) short summary of what the dashboard contains, 3) quick open instructions.
 
+### 13-04-2026 14:20
+- **Prompt**: Append a JOURNAL.md entry for prompt: "generate the code explorer site for this project". Follow .github/agents/journal-logger.agent.md format and safeguards exactly, append-only UTF-8, include mode/model/socratic state, and perform integrity check.
+

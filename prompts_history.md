@@ -134,3 +134,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 15-04-2026 18:32
 - **Prompt**: can you make stubs andd to dos for the lifespan rebirth function fron the MY_NOTES.md in main.py
 
+### 15-04-2026 18:34
+- **Prompt**: can you make stubs andd to dos for the lifespan rebirth function fron the MY_NOTES.md in main.py without implementing them
+

@@ -131,3 +131,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 13-04-2026 14:20
 - **Prompt**: Append a JOURNAL.md entry for prompt: "generate the code explorer site for this project". Follow .github/agents/journal-logger.agent.md format and safeguards exactly, append-only UTF-8, include mode/model/socratic state, and perform integrity check.
 
+### 15-04-2026 18:32
+- **Prompt**: can you make stubs andd to dos for the lifespan rebirth function fron the MY_NOTES.md in main.py
+

@@ -7,28 +7,30 @@ from dataclasses import dataclass
 pygame.init()
 
 # Constants
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
-MIN_SQUARE_SIZE = 20
-MAX_SQUARE_SIZE = 70
-MIN_SPEED = 1.5
-MAX_SPEED = 7.0
-NUM_SQUARES = 10
-FPS = 60
-JITTER_ENABLED = True
-FLEE_RADIUS = 150
-FLEE_STRENGTH = 0.25
-BASELINE_FPS = 60.0
+WINDOW_WIDTH: int = 800
+WINDOW_HEIGHT: int = 600
+MIN_SQUARE_SIZE: int = 20
+MAX_SQUARE_SIZE: int = 70
+MIN_SPEED: float = 1.5
+MAX_SPEED: float = 7.0
+NUM_SQUARES: int = 10
+FPS: int = 60
+JITTER_ENABLED: bool = True
+FLEE_RADIUS: int = 150
+FLEE_STRENGTH: float = 0.25
+BASELINE_FPS: float = 60.0
+MIN_LIFESPAN: float = 30.0
+MAX_LIFESPAN: float = 180.0
 
 # Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
+WHITE: tuple[int, int, int] = (255, 255, 255)
+BLACK: tuple[int, int, int] = (0, 0, 0)
 
 # Create the display
-screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+screen: pygame.Surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Random Moving Squares")
-clock = pygame.time.Clock()
-font = pygame.font.SysFont(None, 28)
+clock: pygame.time.Clock = pygame.time.Clock()
+font: pygame.font.Font = pygame.font.SysFont(None, 28)
 
 
 @dataclass(frozen=True)
@@ -44,30 +46,32 @@ class Square:
     """Represents a square that moves randomly on the canvas."""
 
     def __init__(self, x: int, y: int, size: int) -> None:
-        self.x = float(x)
-        self.y = float(y)
-        self.size = size
+        self.x: float = float(x)
+        self.y: float = float(y)
+        self.size: int = size
+        self.age: float = 0.0
+        self.lifespan: float = random.uniform(MIN_LIFESPAN, MAX_LIFESPAN)
 
         # Bigger squares are slower.
         # Guard against divide-by-zero if min and max size are equal.
         if MAX_SQUARE_SIZE == MIN_SQUARE_SIZE:
-            self.max_speed = MAX_SPEED
+            self.max_speed: float = MAX_SPEED
         else:
-            size_ratio = (self.size - MIN_SQUARE_SIZE) / (
+            size_ratio: float = (self.size - MIN_SQUARE_SIZE) / (
                 MAX_SQUARE_SIZE - MIN_SQUARE_SIZE
             )
-            self.max_speed = MAX_SPEED - size_ratio * (MAX_SPEED - MIN_SPEED)
+            self.max_speed: float = MAX_SPEED - size_ratio * (MAX_SPEED - MIN_SPEED)
             self.max_speed = min(self.max_speed, MAX_SPEED)
             self.max_speed = max(MIN_SPEED, self.max_speed)
 
         # Pick a random movement direction and a speed that does not exceed max_speed.
-        angle = random.uniform(0, 2 * math.pi)
-        speed = random.uniform(MIN_SPEED, self.max_speed)
-        self.vx = math.cos(angle) * speed
-        self.vy = math.sin(angle) * speed
+        angle: float = random.uniform(0, 2 * math.pi)
+        speed: float = random.uniform(MIN_SPEED, self.max_speed)
+        self.vx: float = math.cos(angle) * speed
+        self.vy: float = math.sin(angle) * speed
 
         # Random color
-        self.color = (
+        self.color: tuple[int, int, int] = (
             random.randint(50, 255),
             random.randint(50, 255),
             random.randint(50, 255),
@@ -76,6 +80,18 @@ class Square:
     def snapshot(self) -> SquareSnapshot:
         """Capture the square state so all updates use the same frame data."""
         return SquareSnapshot(owner=self, x=self.x, y=self.y, size=self.size)
+
+    def update_age(self, delta_time: float) -> None:
+        """Stub: track this square's elapsed lifetime."""
+        # TODO: Increase self.age by delta_time each frame.
+        self.age += delta_time
+
+    def is_dead(self) -> bool:
+        """Stub: decide whether this square reached end of life."""
+        # TODO: Return True when self.age >= self.lifespan.
+        if self.age >= self.lifespan:
+            return True
+        return False
 
     def should_apply_jitter(self, delta_time: float) -> bool:
         """Stub: decide whether to jitter this frame or skip it."""
@@ -134,13 +150,13 @@ class Square:
         # TODO: Compute the center of this square.
         # center_x = self.x + self.size / 2
         # center_y = self.y + self.size / 2
-        center_x = self.x + self.size / 2
-        center_y = self.y + self.size / 2
+        center_x: float = self.x + self.size / 2
+        center_y: float = self.y + self.size / 2
 
-        closest_distance = FLEE_RADIUS + 1
-        closest_flee_x = 0.0
-        closest_flee_y = 0.0
-        closest_size_difference = 0.0
+        closest_distance: float = FLEE_RADIUS + 1
+        closest_flee_x: float = 0.0
+        closest_flee_y: float = 0.0
+        closest_size_difference: float = 0.0
 
         # TODO: Loop through all_squares and skip self.
         # for other in all_squares:
@@ -160,11 +176,11 @@ class Square:
             # dx = center_x - other_center_x
             # dy = center_y - other_center_y
             # distance = math.hypot(dx, dy)
-            other_center_x = other.x + other.size / 2
-            other_center_y = other.y + other.size / 2
-            dx = center_x - other_center_x
-            dy = center_y - other_center_y
-            distance = math.hypot(dx, dy)
+            other_center_x: float = other.x + other.size / 2
+            other_center_y: float = other.y + other.size / 2
+            dx: float = center_x - other_center_x
+            dy: float = center_y - other_center_y
+            distance: float = math.hypot(dx, dy)
 
             # TODO: Only consider threats within FLEE_RADIUS.
             # if distance > FLEE_RADIUS:
@@ -177,9 +193,9 @@ class Square:
             #     # pick a small random vector and normalize it
             #     pass
             if distance == 0:
-                flee_x = random.uniform(-1, 1)
-                flee_y = random.uniform(-1, 1)
-                random_length = math.hypot(flee_x, flee_y)
+                flee_x: float = random.uniform(-1, 1)
+                flee_y: float = random.uniform(-1, 1)
+                random_length: float = math.hypot(flee_x, flee_y)
 
                 while random_length < 0.0001:
                     flee_x = random.uniform(-1, 1)
@@ -189,8 +205,8 @@ class Square:
                 flee_x /= random_length
                 flee_y /= random_length
             else:
-                flee_x = dx / distance
-                flee_y = dy / distance
+                flee_x: float = dx / distance
+                flee_y: float = dy / distance
 
             # TODO: Track the closest threat and remember its flee direction.
             if distance < closest_distance:
@@ -202,9 +218,9 @@ class Square:
         # TODO: Use the closest threat to compute flee strength.
         # strength = ...
         if closest_distance <= FLEE_RADIUS:
-            proximity = 1 - (closest_distance / FLEE_RADIUS)
-            strength_per_second = closest_size_difference * proximity * FLEE_STRENGTH
-            strength = strength_per_second * delta_time * BASELINE_FPS
+            proximity: float = 1 - (closest_distance / FLEE_RADIUS)
+            strength_per_second: float = closest_size_difference * proximity * FLEE_STRENGTH
+            strength: float = strength_per_second * delta_time * BASELINE_FPS
 
             # TODO: Add the flee vector to self.vx and self.vy.
             self.vx += closest_flee_x * strength
@@ -215,6 +231,7 @@ class Square:
 
     def update(self, all_squares: list[SquareSnapshot], delta_time: float) -> None:
         """Update the square's position and bounce off walls."""
+        self.update_age(delta_time)
         self.apply_fleeing(all_squares, delta_time)
         self.apply_jitter(delta_time)
         self.clamp_speed()
@@ -257,16 +274,42 @@ class Square:
 
 def draw_fps(surface: pygame.Surface, clock: pygame.time.Clock) -> None:
     """Draw the current FPS in the top-left corner."""
-    fps_text = font.render(f"FPS: {clock.get_fps():.1f}", True, BLACK)
+    fps_text: pygame.Surface = font.render(f"FPS: {clock.get_fps():.1f}", True, BLACK)
     surface.blit(fps_text, (10, 10))
+
+
+def handle_lifespan_rebirth(squares: list[Square]) -> None:
+    """Remove dead squares and spawn replacements while maintaining total count."""
+    death_counter: int = 0
+    alive_squares: list[Square] = []
+    
+    for square in squares:
+        if square.is_dead():
+            death_counter += 1
+        else:
+            alive_squares.append(square)
+
+    # Spawn replacement squares to maintain pool size
+    for _ in range(death_counter):
+        size: int = random.randint(MIN_SQUARE_SIZE, MAX_SQUARE_SIZE)
+        new_square: Square = Square(
+            x=random.randint(0, WINDOW_WIDTH - size),
+            y=random.randint(0, WINDOW_HEIGHT - size),
+            size=size,
+        )
+        alive_squares.append(new_square)
+
+    squares[:] = alive_squares
+    
+    
 
 
 def main() -> None:
     """Main game loop."""
-    sizes = [
+    sizes: list[int] = [
         random.randint(MIN_SQUARE_SIZE, MAX_SQUARE_SIZE) for _ in range(NUM_SQUARES)
     ]
-    squares = [
+    squares: list[Square] = [
         Square(
             size=size,
             x=random.randint(0, WINDOW_WIDTH - size),
@@ -275,19 +318,21 @@ def main() -> None:
         for size in sizes
     ]
 
-    running = True
+    running: bool = True
     while running:
-        delta_time = clock.tick(FPS) / 1000.0
+        delta_time: float = clock.tick(FPS) / 1000.0
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
         # Snapshot all squares before any updates so fleeing is not order-dependent.
-        square_snapshots = [square.snapshot() for square in squares]
+        square_snapshots: list[SquareSnapshot] = [square.snapshot() for square in squares]
 
         for square in squares:
             square.update(square_snapshots, delta_time)
+
+        handle_lifespan_rebirth(squares)
 
         screen.fill(WHITE)
         for square in squares:

@@ -149,3 +149,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 15-04-2026 18:54
 - **Prompt**: can you do the type hints and also update the readme
 
+### 15-04-2026 18:56
+- **Prompt**: regenerate the code explorer site
+

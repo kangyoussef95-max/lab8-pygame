@@ -13,7 +13,7 @@ MIN_SQUARE_SIZE = 20
 MAX_SQUARE_SIZE = 70
 MIN_SPEED = 1.5
 MAX_SPEED = 7.0
-NUM_SQUARES = 20
+NUM_SQUARES = 10
 FPS = 60
 JITTER_ENABLED = True
 FLEE_RADIUS = 150
@@ -28,6 +28,7 @@ BLACK = (0, 0, 0)
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Random Moving Squares")
 clock = pygame.time.Clock()
+font = pygame.font.SysFont(None, 28)
 
 
 @dataclass(frozen=True)
@@ -83,14 +84,14 @@ class Square:
             return False
 
         # Keep the original 10% chance at 60 FPS, but make it time-scaled.
-        frame_scale = delta_time * BASELINE_FPS
-        chance_this_frame = 1 - (1 - 0.1) ** frame_scale
+        chance_per_second = 0.1 * BASELINE_FPS
+        chance_this_frame = min(1.0, chance_per_second * delta_time)
         return random.random() < chance_this_frame
 
-    def compute_jitter_rotation(self) -> float:
+    def compute_jitter_rotation(self, delta_time: float) -> float:
         """Stub: return a small rotation angle in radians."""
         # TODO: Return a small random angle, e.g. between -max_angle and +max_angle.
-        max_angle_degrees = 5.0
+        max_angle_degrees = 5.0 * delta_time * BASELINE_FPS
         return math.radians(random.uniform(-max_angle_degrees, max_angle_degrees))
 
     def rotate_velocity(self, angle_radians: float) -> None:
@@ -117,7 +118,7 @@ class Square:
         #     angle = self.compute_jitter_rotation()
         #     self.rotate_velocity(angle)
         if self.should_apply_jitter(delta_time):
-            angle = self.compute_jitter_rotation()
+            angle = self.compute_jitter_rotation(delta_time)
             self.rotate_velocity(angle)
 
     def clamp_speed(self) -> None:
@@ -202,8 +203,8 @@ class Square:
         # strength = ...
         if closest_distance <= FLEE_RADIUS:
             proximity = 1 - (closest_distance / FLEE_RADIUS)
-            frame_scale = delta_time * BASELINE_FPS
-            strength = closest_size_difference * proximity * FLEE_STRENGTH * frame_scale
+            strength_per_second = closest_size_difference * proximity * FLEE_STRENGTH
+            strength = strength_per_second * delta_time * BASELINE_FPS
 
             # TODO: Add the flee vector to self.vx and self.vy.
             self.vx += closest_flee_x * strength
@@ -218,9 +219,9 @@ class Square:
         self.apply_jitter(delta_time)
         self.clamp_speed()
 
-        frame_scale = delta_time * BASELINE_FPS
-        self.x += self.vx * frame_scale
-        self.y += self.vy * frame_scale
+        # Move using real elapsed time instead of fixed per-frame movement.
+        self.x += self.vx * delta_time * BASELINE_FPS
+        self.y += self.vy * delta_time * BASELINE_FPS
 
         # Bounce off walls
         if self.x <= 0:
@@ -254,6 +255,12 @@ class Square:
         )
 
 
+def draw_fps(surface: pygame.Surface, clock: pygame.time.Clock) -> None:
+    """Draw the current FPS in the top-left corner."""
+    fps_text = font.render(f"FPS: {clock.get_fps():.1f}", True, BLACK)
+    surface.blit(fps_text, (10, 10))
+
+
 def main() -> None:
     """Main game loop."""
     sizes = [
@@ -285,6 +292,8 @@ def main() -> None:
         screen.fill(WHITE)
         for square in squares:
             square.draw(screen)
+
+        draw_fps(screen, clock)
 
         pygame.display.flip()
 

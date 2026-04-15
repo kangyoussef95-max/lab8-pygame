@@ -152,3 +152,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 15-04-2026 18:56
 - **Prompt**: regenerate the code explorer site
 
+### 15-04-2026 18:56
+- **Prompt**: Regenerate the code explorer HTML dashboard for the lab8-pygame project. Analyze the main.py file and create a comprehensive, interactive HTML site at docs/code_explorer.html that includes:  - Architecture overview with Mermaid diagrams showing class relationships and game loop flow - Function/method documentation with type hints and purpose - Feature highlights (movement, fleeing, lifespan, rebirth, jitter) - Game mechanics explanation - Code patterns and best practices used - Interactive navigation and visual styling  The project is a Pygame application with 10 animated squares featuring: - Lifespan and rebirth mechanics (30-180 second random lifespans) - Fleeing behavior (smaller squares flee from larger ones) - Jitter movement (random velocity rotations) - Speed based on size (larger = slower) - Collision detection with walls  Make it pedagogical, visually clear, and suitable for a first-year software engineering student to understand the codebase.
+

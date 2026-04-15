@@ -146,3 +146,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 15-04-2026 18:53
 - **Prompt**: can you do the type hints
 
+### 15-04-2026 18:54
+- **Prompt**: can you do the type hints and also update the readme
+

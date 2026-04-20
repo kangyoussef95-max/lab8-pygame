@@ -13,11 +13,13 @@ MIN_SQUARE_SIZE: int = 20
 MAX_SQUARE_SIZE: int = 70
 MIN_SPEED: float = 1.5
 MAX_SPEED: float = 7.0
-NUM_SQUARES: int = 10
+NUM_SQUARES: int = 20
 FPS: int = 60
 JITTER_ENABLED: bool = True
 FLEE_RADIUS: int = 150
 FLEE_STRENGTH: float = 0.25
+chase_RADIUS: int = 150
+chase_STRENGTH: float = 0.25
 BASELINE_FPS: float = 60.0
 MIN_LIFESPAN: float = 30.0
 MAX_LIFESPAN: float = 180.0
@@ -229,9 +231,70 @@ class Square:
         # NOTE: clamp_speed() in update() will keep the velocity from getting too large.
         return
 
+    def apply_chaseing(self, all_squares: list[SquareSnapshot], delta_time: float) -> None:
+        """Move this square toward nearby smaller squares."""
+        center_x: float = self.x + self.size / 2
+        center_y: float = self.y + self.size / 2
+
+        closest_distance: float = chase_RADIUS + 1
+        closest_chase_x: float = 0.0
+        closest_chase_y: float = 0.0
+        closest_size_difference: float = 0.0
+
+        for other in all_squares:
+            if other.owner is self:
+                continue
+
+            # Only chase smaller squares.
+            if other.size >= self.size:
+                continue
+
+            other_center_x: float = other.x + other.size / 2
+            other_center_y: float = other.y + other.size / 2
+            dx: float = other_center_x - center_x
+            dy: float = other_center_y - center_y
+            distance: float = math.hypot(dx, dy)
+
+            if distance > chase_RADIUS:
+                continue
+
+            if distance == 0:
+                chase_x: float = random.uniform(-1, 1)
+                chase_y: float = random.uniform(-1, 1)
+                random_length: float = math.hypot(chase_x, chase_y)
+
+                while random_length < 0.0001:
+                    chase_x = random.uniform(-1, 1)
+                    chase_y = random.uniform(-1, 1)
+                    random_length = math.hypot(chase_x, chase_y)
+
+                chase_x /= random_length
+                chase_y /= random_length
+            else:
+                chase_x = dx / distance
+                chase_y = dy / distance
+
+            if distance < closest_distance:
+                closest_distance = distance
+                closest_chase_x = chase_x
+                closest_chase_y = chase_y
+                closest_size_difference = self.size - other.size
+
+        if closest_distance <= chase_RADIUS:
+            proximity: float = 1 - (closest_distance / chase_RADIUS)
+            strength_per_second: float = (
+                closest_size_difference * proximity * chase_STRENGTH
+            )
+            strength: float = strength_per_second * delta_time * BASELINE_FPS
+
+            self.vx += closest_chase_x * strength
+            self.vy += closest_chase_y * strength
+        return
+
     def update(self, all_squares: list[SquareSnapshot], delta_time: float) -> None:
         """Update the square's position and bounce off walls."""
         self.update_age(delta_time)
+        self.apply_chaseing(all_squares, delta_time)
         self.apply_fleeing(all_squares, delta_time)
         self.apply_jitter(delta_time)
         self.clamp_speed()
@@ -282,7 +345,7 @@ def handle_lifespan_rebirth(squares: list[Square]) -> None:
     """Remove dead squares and spawn replacements while maintaining total count."""
     death_counter: int = 0
     alive_squares: list[Square] = []
-    
+
     for square in squares:
         if square.is_dead():
             death_counter += 1
@@ -300,9 +363,6 @@ def handle_lifespan_rebirth(squares: list[Square]) -> None:
         alive_squares.append(new_square)
 
     squares[:] = alive_squares
-    
-    
-
 
 def main() -> None:
     """Main game loop."""

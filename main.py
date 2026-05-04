@@ -291,11 +291,13 @@ def draw_fps(surface: pygame.Surface, clock: pygame.time.Clock) -> None:
 def handle_lifespan_rebirth(squares: list[Square]) -> None:
     """Remove dead squares and spawn replacements while maintaining total count."""
     death_counter: int = 0
+    dead_squares: list = []
     alive_squares: list[Square] = []
 
     for square in squares:
         if square.is_dead():
             death_counter += 1
+            dead_squares.append(square)
         else:
             alive_squares.append(square)
 
@@ -303,9 +305,9 @@ def handle_lifespan_rebirth(squares: list[Square]) -> None:
     for _ in range(death_counter):
         size: int = random.randint(MIN_SQUARE_SIZE, MAX_SQUARE_SIZE)
         new_square: Square = Square(
-            x=random.randint(0, WINDOW_WIDTH - size),
-            y=random.randint(0, WINDOW_HEIGHT - size),
-            size=size,
+            x= random.randint(0, WINDOW_WIDTH - size),
+            y= random.randint(0, WINDOW_WIDTH - size),
+            size=dead_squares[-1].size,
         )
         alive_squares.append(new_square)
 

@@ -12,7 +12,7 @@ WINDOW_HEIGHT: int = 600
 MIN_SQUARE_SIZE: int = 4
 MAX_SQUARE_SIZE: int = 25
 MIN_SPEED: float = 1.5
-MAX_SPEED: float = 7.0
+MAX_SPEED: float = 2.0
 NUM_SQUARES: int = 45
 FPS: int = 60
 JITTER_ENABLED: bool = True
@@ -237,6 +237,10 @@ class Square:
 
         self.vx += chase_x * strength
         self.vy += chase_y * strength
+    
+    def get_rect(self) -> pygame.Rect:
+     # helping function for the check_collision function
+        return pygame.Rect(round(self.x), round(self.y), self.size, self.size)
         
     def screen_wrap(self) -> None:
         # Horizontal wrap
@@ -282,11 +286,10 @@ class Square:
         )
 
 def check_collision(a: Square, b: Square) -> bool:
-    # Returns True if squares a and b collide
+    # returns true if a and b collide
     if a is b:
         return False
-    return a.pygame.Rect(round(a.x), round(a.y), a.size, a.size).colliderect(b.pygame.Rect(round(b.x), round(b.y), b.size, b.size))
-
+    return a.get_rect().colliderect(b.get_rect())
 
 def draw_fps(surface: pygame.Surface, clock: pygame.time.Clock) -> None:
     """Draw the current FPS in the top-left corner."""
@@ -309,15 +312,15 @@ def handle_lifespan_rebirth(squares: list[Square]) -> None:
 
     # Spawn replacement squares to maintain pool size
     for _ in range(death_counter):
-        size: int = random.randint(MIN_SQUARE_SIZE, MAX_SQUARE_SIZE)
+        size: int = dead_squares[-1].size
         new_square: Square = Square(
             x= random.randint(0, WINDOW_WIDTH - size),
             y= random.randint(0, WINDOW_WIDTH - size),
-            size=dead_squares[-1].size,
+            size=size,
         )
         alive_squares.append(new_square)
 
-    squares[:] = alive_squares
+    squares[:] = alive_squares       
 
 def main() -> None:
     """Main game loop."""

@@ -237,6 +237,19 @@ class Square:
 
         self.vx += chase_x * strength
         self.vy += chase_y * strength
+        
+    def screen_wrap(self) -> None:
+        # Horizontal wrap
+        if self.x + self.size < 0:
+            self.x = WINDOW_WIDTH
+        elif self.x > WINDOW_WIDTH:
+            self.x = -self.size
+ 
+        # Vertical wrap
+        if self.y + self.size < 0:
+            self.y = WINDOW_HEIGHT
+        elif self.y > WINDOW_HEIGHT:
+            self.y = -self.size
 
     def update(self, all_squares: list[SquareSnapshot], delta_time: float) -> None:
         """Update the square's position and bounce off walls."""
@@ -249,29 +262,13 @@ class Square:
         # Move using real elapsed time instead of fixed per-frame movement.
         self.x += self.vx * delta_time * BASELINE_FPS
         self.y += self.vy * delta_time * BASELINE_FPS
-
-        # Bounce off walls
-        if self.x <= 0:
-            self.x = 0  
-            if self.vx < 0:
-                self.vx = -self.vx
-        elif self.x + self.size >= WINDOW_WIDTH:
-            self.x = WINDOW_WIDTH - self.size
-            if self.vx > 0:
-                self.vx = -self.vx
-
-        if self.y <= 0:
-            self.y = 0
-            if self.vy < 0:
-                self.vy = -self.vy
-        elif self.y + self.size >= WINDOW_HEIGHT:
-            self.y = WINDOW_HEIGHT - self.size
-            if self.vy > 0:
-                self.vy = -self.vy
+        
+        # Screen Wrapping Call
+        self.screen_wrap()
 
         # Keep square within bounds
-        self.x = max(0, min(self.x, WINDOW_WIDTH - self.size))
-        self.y = max(0, min(self.y, WINDOW_HEIGHT - self.size))
+        self.x = max(0, min(self.x, WINDOW_WIDTH + self.size))
+        self.y = max(0, min(self.y, WINDOW_HEIGHT + self.size))
 
     def draw(self, surface: pygame.Surface) -> None:
         """Draw the square on the given surface."""

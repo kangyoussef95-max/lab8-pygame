@@ -18,8 +18,8 @@ FPS: int = 60
 JITTER_ENABLED: bool = True
 FLEE_RADIUS: int = 150
 FLEE_STRENGTH: float = 0.25
-chase_RADIUS: int = 150
-chase_STRENGTH: float = 0.25
+CHASE_RADIUS: int = 150
+CHASE_STRENGTH: float = 0.25
 BASELINE_FPS: float = 60.0
 MIN_LIFESPAN: float = 30.0
 MAX_LIFESPAN: float = 180.0
@@ -54,8 +54,8 @@ class Square:
         self.age: float = 0.0
         self.lifespan: float = random.uniform(MIN_LIFESPAN, MAX_LIFESPAN)
 
-        # Bigger squares are slower.
-        # Guard against divide-by-zero if min and max size are equal.
+        # Bigger squares get a lower speed cap so size and motion stay easy to compare.
+        # Guard against divide-by-zero if the size range collapses to one value.
         if MAX_SQUARE_SIZE == MIN_SQUARE_SIZE:
             self.max_speed: float = MAX_SPEED
         else:
@@ -84,39 +84,30 @@ class Square:
         return SquareSnapshot(owner=self, x=self.x, y=self.y, size=self.size)
 
     def update_age(self, delta_time: float) -> None:
-        """Stub: track this square's elapsed lifetime."""
-        # TODO: Increase self.age by delta_time each frame.
+        """Increase this square's elapsed lifetime."""
         self.age += delta_time
 
     def is_dead(self) -> bool:
-        """Stub: decide whether this square reached end of life."""
-        # TODO: Return True when self.age >= self.lifespan.
-        if self.age >= self.lifespan:
-            return True
-        return False
+        """Return True when this square reaches the end of its lifespan."""
+        return self.age >= self.lifespan
 
     def should_apply_jitter(self, delta_time: float) -> bool:
-        """Stub: decide whether to jitter this frame or skip it."""
-        # TODO: Return True/False based on your strategy (every frame, or every now and then).
+        """Decide whether this square should jitter on the current frame."""
         if delta_time <= 0:
             return False
 
-        # Keep the original 10% chance at 60 FPS, but make it time-scaled.
+        # Keep the original 10% chance at 60 FPS, but scale it by elapsed time.
         chance_per_second = 0.1 * BASELINE_FPS
         chance_this_frame = min(1.0, chance_per_second * delta_time)
         return random.random() < chance_this_frame
 
     def compute_jitter_rotation(self, delta_time: float) -> float:
-        """Stub: return a small rotation angle in radians."""
-        # TODO: Return a small random angle, e.g. between -max_angle and +max_angle.
+        """Return a small random rotation angle in radians."""
         max_angle_degrees = 5.0 * delta_time * BASELINE_FPS
         return math.radians(random.uniform(-max_angle_degrees, max_angle_degrees))
 
     def rotate_velocity(self, angle_radians: float) -> None:
-        """Stub: rotate (vx, vy) by angle_radians while preserving speed."""
-        # TODO: Use a 2D rotation matrix to rotate self.vx/self.vy.
-        # vx' = vx*cos(a) - vy*sin(a)
-        # vy' = vx*sin(a) + vy*cos(a)
+        """Rotate (vx, vy) by angle_radians while preserving speed."""
         cos_a = math.cos(angle_radians)
         sin_a = math.sin(angle_radians)
 
@@ -127,174 +118,130 @@ class Square:
         self.vy = new_vy
 
     def apply_jitter(self, delta_time: float) -> None:
-        """Stub: apply jitter as a small rotation of the speed vector."""
+        """Apply jitter as a small rotation of the speed vector."""
         if not JITTER_ENABLED:
             return
 
-        # TODO: If should_apply_jitter() is True, compute angle and rotate velocity.
-        # if self.should_apply_jitter():
-        #     angle = self.compute_jitter_rotation()
-        #     self.rotate_velocity(angle)
         if self.should_apply_jitter(delta_time):
             angle = self.compute_jitter_rotation(delta_time)
             self.rotate_velocity(angle)
 
     def clamp_speed(self) -> None:
-        """Clamp total velocity magnitude so it does not exceed this square's max_speed."""
+        """Clamp total velocity magnitude so it does not exceed the speed cap."""
         speed = math.hypot(self.vx, self.vy)
         if speed > self.max_speed and speed > 0:
             scale = self.max_speed / speed
             self.vx *= scale
             self.vy *= scale
 
-    def apply_fleeing(self, all_squares: list[SquareSnapshot], delta_time: float) -> None:
-        """Stub: push this square away from nearby larger squares."""
-        # TODO: Compute the center of this square.
-        # center_x = self.x + self.size / 2
-        # center_y = self.y + self.size / 2
+    def _random_unit_direction(self) -> tuple[float, float]:
+        """Return a safe random unit vector for overlap cases."""
+        direction_x: float = random.uniform(-1, 1)
+        direction_y: float = random.uniform(-1, 1)
+        length: float = math.hypot(direction_x, direction_y)
+
+        while length < 0.0001:
+            direction_x = random.uniform(-1, 1)
+            direction_y = random.uniform(-1, 1)
+            length = math.hypot(direction_x, direction_y)
+
+        return direction_x / length, direction_y / length
+
+    def _find_closest_target(
+        self,
+        all_squares: list[SquareSnapshot],
+        radius: float,
+        *,
+        seek_larger: bool,
+    ) -> tuple[float, float, float, float] | None:
+        """Find the nearest relevant square and the direction to use for it."""
         center_x: float = self.x + self.size / 2
         center_y: float = self.y + self.size / 2
 
-        closest_distance: float = FLEE_RADIUS + 1
-        closest_flee_x: float = 0.0
-        closest_flee_y: float = 0.0
-        closest_size_difference: float = 0.0
-
-        # TODO: Loop through all_squares and skip self.
-        # for other in all_squares:
-        #     if other is self:
-        #         continue
-        for other in all_squares:
-            if other.owner is self:
-                continue
-
-            # TODO: Ignore squares that are the same size or smaller.
-            # if other.size <= self.size:
-            #     continue
-            if other.size <= self.size:
-                continue
-
-            # TODO: Compute dx, dy, and distance between square centers.
-            # dx = center_x - other_center_x
-            # dy = center_y - other_center_y
-            # distance = math.hypot(dx, dy)
-            other_center_x: float = other.x + other.size / 2
-            other_center_y: float = other.y + other.size / 2
-            dx: float = center_x - other_center_x
-            dy: float = center_y - other_center_y
-            distance: float = math.hypot(dx, dy)
-
-            # TODO: Only consider threats within FLEE_RADIUS.
-            # if distance > FLEE_RADIUS:
-            #     continue
-            if distance > FLEE_RADIUS:
-                continue
-
-            # TODO: Handle distance == 0 with a tiny random direction.
-            # if distance == 0:
-            #     # pick a small random vector and normalize it
-            #     pass
-            if distance == 0:
-                flee_x: float = random.uniform(-1, 1)
-                flee_y: float = random.uniform(-1, 1)
-                random_length: float = math.hypot(flee_x, flee_y)
-
-                while random_length < 0.0001:
-                    flee_x = random.uniform(-1, 1)
-                    flee_y = random.uniform(-1, 1)
-                    random_length = math.hypot(flee_x, flee_y)
-
-                flee_x /= random_length
-                flee_y /= random_length
-            else:
-                flee_x: float = dx / distance
-                flee_y: float = dy / distance
-
-            # TODO: Track the closest threat and remember its flee direction.
-            if distance < closest_distance:
-                closest_distance = distance
-                closest_flee_x = flee_x
-                closest_flee_y = flee_y
-                closest_size_difference = other.size - self.size
-
-        # TODO: Use the closest threat to compute flee strength.
-        # strength = ...
-        if closest_distance <= FLEE_RADIUS:
-            proximity: float = 1 - (closest_distance / FLEE_RADIUS)
-            strength_per_second: float = closest_size_difference * proximity * FLEE_STRENGTH
-            strength: float = strength_per_second * delta_time * BASELINE_FPS
-
-            # TODO: Add the flee vector to self.vx and self.vy.
-            self.vx += closest_flee_x * strength
-            self.vy += closest_flee_y * strength
-
-        # NOTE: clamp_speed() in update() will keep the velocity from getting too large.
-        return
-
-    def apply_chaseing(self, all_squares: list[SquareSnapshot], delta_time: float) -> None:
-        """Move this square toward nearby smaller squares."""
-        center_x: float = self.x + self.size / 2
-        center_y: float = self.y + self.size / 2
-
-        closest_distance: float = chase_RADIUS + 1
-        closest_chase_x: float = 0.0
-        closest_chase_y: float = 0.0
+        closest_distance: float = radius + 1
+        closest_direction_x: float = 0.0
+        closest_direction_y: float = 0.0
         closest_size_difference: float = 0.0
 
         for other in all_squares:
             if other.owner is self:
                 continue
 
-            # Only chase smaller squares.
-            if other.size >= self.size:
-                continue
+            if seek_larger:
+                if other.size <= self.size:
+                    continue
+                other_center_x: float = other.x + other.size / 2
+                other_center_y: float = other.y + other.size / 2
+                dx: float = center_x - other_center_x
+                dy: float = center_y - other_center_y
+                size_difference: float = other.size - self.size
+            else:
+                if other.size >= self.size:
+                    continue
+                other_center_x = other.x + other.size / 2
+                other_center_y = other.y + other.size / 2
+                dx = other_center_x - center_x
+                dy = other_center_y - center_y
+                size_difference = self.size - other.size
 
-            other_center_x: float = other.x + other.size / 2
-            other_center_y: float = other.y + other.size / 2
-            dx: float = other_center_x - center_x
-            dy: float = other_center_y - center_y
             distance: float = math.hypot(dx, dy)
-
-            if distance > chase_RADIUS:
+            if distance > radius:
                 continue
 
             if distance == 0:
-                chase_x: float = random.uniform(-1, 1)
-                chase_y: float = random.uniform(-1, 1)
-                random_length: float = math.hypot(chase_x, chase_y)
-
-                while random_length < 0.0001:
-                    chase_x = random.uniform(-1, 1)
-                    chase_y = random.uniform(-1, 1)
-                    random_length = math.hypot(chase_x, chase_y)
-
-                chase_x /= random_length
-                chase_y /= random_length
+                direction_x, direction_y = self._random_unit_direction()
             else:
-                chase_x = dx / distance
-                chase_y = dy / distance
+                direction_x = dx / distance
+                direction_y = dy / distance
 
             if distance < closest_distance:
                 closest_distance = distance
-                closest_chase_x = chase_x
-                closest_chase_y = chase_y
-                closest_size_difference = self.size - other.size
+                closest_direction_x = direction_x
+                closest_direction_y = direction_y
+                closest_size_difference = size_difference
 
-        if closest_distance <= chase_RADIUS:
-            proximity: float = 1 - (closest_distance / chase_RADIUS)
-            strength_per_second: float = (
-                closest_size_difference * proximity * chase_STRENGTH
+        if closest_distance <= radius:
+            return (
+                closest_distance,
+                closest_direction_x,
+                closest_direction_y,
+                closest_size_difference,
             )
-            strength: float = strength_per_second * delta_time * BASELINE_FPS
 
-            self.vx += closest_chase_x * strength
-            self.vy += closest_chase_y * strength
-        return
+        return None
+
+    def apply_fleeing(self, all_squares: list[SquareSnapshot], delta_time: float) -> None:
+        """Push this square away from nearby larger squares."""
+        target = self._find_closest_target(all_squares, FLEE_RADIUS, seek_larger=True)
+        if target is None:
+            return
+
+        closest_distance, flee_x, flee_y, closest_size_difference = target
+        proximity: float = 1 - (closest_distance / FLEE_RADIUS)
+        strength_per_second: float = closest_size_difference * proximity * FLEE_STRENGTH
+        strength: float = strength_per_second * delta_time * BASELINE_FPS
+
+        self.vx += flee_x * strength
+        self.vy += flee_y * strength
+
+    def apply_chasing(self, all_squares: list[SquareSnapshot], delta_time: float) -> None:
+        """Move this square toward nearby smaller squares."""
+        target = self._find_closest_target(all_squares, CHASE_RADIUS, seek_larger=False)
+        if target is None:
+            return
+
+        closest_distance, chase_x, chase_y, closest_size_difference = target
+        proximity: float = 1 - (closest_distance / CHASE_RADIUS)
+        strength_per_second: float = closest_size_difference * proximity * CHASE_STRENGTH
+        strength: float = strength_per_second * delta_time * BASELINE_FPS
+
+        self.vx += chase_x * strength
+        self.vy += chase_y * strength
 
     def update(self, all_squares: list[SquareSnapshot], delta_time: float) -> None:
         """Update the square's position and bounce off walls."""
         self.update_age(delta_time)
-        self.apply_chaseing(all_squares, delta_time)
+        self.apply_chasing(all_squares, delta_time)
         self.apply_fleeing(all_squares, delta_time)
         self.apply_jitter(delta_time)
         self.clamp_speed()
@@ -305,7 +252,7 @@ class Square:
 
         # Bounce off walls
         if self.x <= 0:
-            self.x = 0
+            self.x = 0  
             if self.vx < 0:
                 self.vx = -self.vx
         elif self.x + self.size >= WINDOW_WIDTH:

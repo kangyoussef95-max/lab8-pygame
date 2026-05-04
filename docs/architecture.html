@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Architecture Overview</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f1e8;
+      --panel: rgba(255, 255, 255, 0.86);
+      --panel-border: rgba(32, 25, 15, 0.12);
+      --text: #1f1a17;
+      --muted: #665b4d;
+      --accent: #8c5a2b;
+      --accent-2: #335c67;
+      --shadow: 0 18px 40px rgba(49, 36, 22, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(140, 90, 43, 0.16), transparent 32%),
+        radial-gradient(circle at right 20%, rgba(51, 92, 103, 0.12), transparent 24%),
+        linear-gradient(180deg, #fbf8f2 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+
+    header {
+      padding: 26px 24px;
+      border: 1px solid var(--panel-border);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .lede {
+      margin: 0;
+      max-width: 78ch;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .card {
+      border: 1px solid var(--panel-border);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 18px 22px 0;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.45rem;
+      letter-spacing: -0.02em;
+    }
+
+    .card-body {
+      padding: 10px 22px 22px;
+    }
+
+    p, li {
+      line-height: 1.65;
+      color: var(--text);
+    }
+
+    .note-list {
+      margin: 12px 0 0;
+      padding-left: 20px;
+    }
+
+    .mermaid {
+      background: #fffdf8;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+      padding: 18px;
+      overflow-x: auto;
+    }
+
+    .tagline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(140, 90, 43, 0.1);
+      color: var(--accent);
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .accent {
+      color: var(--accent-2);
+      font-weight: 700;
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        padding: 18px 12px 28px;
+      }
+
+      header, .card {
+        border-radius: 18px;
+      }
+
+      .card-body, .card-header {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="tagline">Pygame Architecture</div>
+      <h1>Random Squares System</h1>
+      <p class="lede">
+        This project is a single-module Pygame application. The code in <span class="accent">main.py</span>
+        initializes the game, updates a pool of squares each frame, applies fleeing and jitter, handles
+        lifespan rebirth, and renders the scene.
+      </p>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <div class="card-header">
+          <h2>Module Dependency Graph</h2>
+        </div>
+        <div class="card-body">
+          <p>Because the repository currently centers on one executable module, this graph shows the internal structure inside <span class="accent">main.py</span> and its external library dependencies.</p>
+        </div>
+        <div class="mermaid">
+graph TD
+    A["main.py"] --> B["pygame"]
+    A --> C["random"]
+    A --> D["math"]
+    A --> E["dataclasses.dataclass"]
+
+    A --> F["Square"]
+    A --> G["SquareSnapshot"]
+    A --> H["draw_fps()"]
+    A --> I["handle_lifespan_rebirth()"]
+    A --> J["main()"]
+
+    F --> G
+    F --> H
+    F --> I
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>Runtime Flow</h2>
+        </div>
+        <div class="card-body">
+          <p>The main loop polls events, snapshots square state, updates every square, replaces dead squares, and then renders the frame.</p>
+        </div>
+        <div class="mermaid">
+graph TD
+    A["Program start"] --> B["pygame.init()"]
+    B --> C["Create window, clock, and font"]
+    C --> D["Build initial square pool"]
+    D --> E["Enter frame loop"]
+    E --> F["clock.tick(FPS)"]
+    F --> G["Poll pygame events"]
+    G --> H{"QUIT event received?"}
+    H -- "Yes" --> I["Set running = False"]
+    H -- "No" --> J["Snapshot all squares"]
+    I --> U["pygame.quit()"]
+    J --> K["Update each square"]
+    K --> L["Handle lifespan rebirth"]
+    L --> M["Clear screen"]
+    M --> N["Draw squares"]
+    N --> O["Draw FPS"]
+    O --> P["pygame.display.flip()"]
+    P --> E
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>Function Call Graph</h2>
+        </div>
+        <div class="card-body">
+          <p>The call graph highlights the main control path and the methods that shape each square's behavior.</p>
+        </div>
+        <div class="mermaid">
+graph TD
+    A["main()"] --> B["pygame.event.get()"]
+    A --> C["Square.snapshot()"]
+    A --> D["Square.update()"]
+    A --> E["handle_lifespan_rebirth()"]
+    A --> F["Square.draw()"]
+    A --> G["draw_fps()"]
+    A --> H["pygame.display.flip()"]
+    A --> I["pygame.quit()"]
+
+    D --> D1["Square.update_age()"]
+    D --> D2["Square.apply_chaseing()"]
+    D --> D3["Square.apply_fleeing()"]
+    D --> D4["Square.apply_jitter()"]
+    D --> D5["Square.clamp_speed()"]
+
+    D4 --> D4a["Square.should_apply_jitter()"]
+    D4 --> D4b["Square.compute_jitter_rotation()"]
+    D4 --> D4c["Square.rotate_velocity()"]
+
+    D3 --> D3a["math.hypot()"]
+    D2 --> D2a["math.hypot()"]
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>Sequence Diagram</h2>
+        </div>
+        <div class="card-body">
+          <p>This sequence shows the primary execution path, including the per-frame loop and the branch that replaces dead squares.</p>
+        </div>
+        <div class="mermaid">
+sequenceDiagram
+    participant U as "User"
+    participant P as "Python runtime"
+    participant M as "main.py"
+    participant Py as "pygame"
+    participant S as "Square objects"
+
+    U->>P: Run the script
+    P->>M: Import module and call main()
+    M->>Py: init()
+    M->>Py: set_mode(), set_caption(), Clock(), SysFont()
+    M->>M: Build initial square pool
+
+    loop Each frame
+        M->>Py: clock.tick(FPS)
+        M->>Py: event.get()
+        alt QUIT event seen
+            M->>M: running = False
+        else Continue running
+            M->>M: Capture SquareSnapshot objects
+            loop For each square
+                M->>S: update(snapshot, delta_time)
+                S->>S: update_age()
+                S->>S: apply_chaseing()
+                S->>S: apply_fleeing()
+                S->>S: apply_jitter()
+                S->>S: clamp_speed()
+                S->>S: Move and bounce within bounds
+            end
+            M->>M: handle_lifespan_rebirth()
+            alt One or more squares died
+                M->>M: Remove dead squares and spawn replacements
+            else No dead squares
+                M->>M: Keep the existing pool
+            end
+            M->>Py: fill(), draw.rect(), display.flip()
+        end
+    end
+
+    M->>Py: quit()
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>Notes</h2>
+        </div>
+        <div class="card-body">
+          <ul class="note-list">
+            <li>The project currently has one source file, so the architecture is intentionally compact.</li>
+            <li><span class="accent">SquareSnapshot</span> keeps fleeing and chasing decisions stable within a frame.</li>
+            <li>Lifespan rebirth keeps the number of squares constant even when individual squares expire.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: "loose",
+      theme: "neutral"
+    });
+  </script>
+</body>
+</html>

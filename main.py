@@ -250,6 +250,8 @@ class Square:
             self.y = WINDOW_HEIGHT
         elif self.y > WINDOW_HEIGHT:
             self.y = -self.size
+            
+    
 
     def update(self, all_squares: list[SquareSnapshot], delta_time: float) -> None:
         """Update the square's position and bounce off walls."""
@@ -263,6 +265,7 @@ class Square:
         self.x += self.vx * delta_time * BASELINE_FPS
         self.y += self.vy * delta_time * BASELINE_FPS
         
+    
         # Screen Wrapping Call
         self.screen_wrap()
 
@@ -277,6 +280,12 @@ class Square:
             self.color,
             (round(self.x), round(self.y), self.size, self.size),
         )
+
+def check_collision(a: Square, b: Square) -> bool:
+    # Returns True if squares a and b collide
+    if a is b:
+        return False
+    return a.pygame.Rect(round(a.x), round(a.y), a.size, a.size).colliderect(b.pygame.Rect(round(b.x), round(b.y), b.size, b.size))
 
 
 def draw_fps(surface: pygame.Surface, clock: pygame.time.Clock) -> None:

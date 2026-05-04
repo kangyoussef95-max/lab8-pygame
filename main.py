@@ -9,11 +9,11 @@ pygame.init()
 # Constants
 WINDOW_WIDTH: int = 800
 WINDOW_HEIGHT: int = 600
-MIN_SQUARE_SIZE: int = 20
-MAX_SQUARE_SIZE: int = 70
+MIN_SQUARE_SIZE: int = 4
+MAX_SQUARE_SIZE: int = 25
 MIN_SPEED: float = 1.5
 MAX_SPEED: float = 7.0
-NUM_SQUARES: int = 20
+NUM_SQUARES: int = 45
 FPS: int = 60
 JITTER_ENABLED: bool = True
 FLEE_RADIUS: int = 150
@@ -313,9 +313,8 @@ def handle_lifespan_rebirth(squares: list[Square]) -> None:
 
 def main() -> None:
     """Main game loop."""
-    sizes: list[int] = [
-        random.randint(MIN_SQUARE_SIZE, MAX_SQUARE_SIZE) for _ in range(NUM_SQUARES)
-    ]
+    sizes: list[int] = [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,10,10,10,10,10,10,10,10,10,10,25,25,25,25,25]
+        
     squares: list[Square] = [
         Square(
             size=size,

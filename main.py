@@ -320,7 +320,13 @@ def handle_lifespan_rebirth(squares: list[Square]) -> None:
         )
         alive_squares.append(new_square)
 
-    squares[:] = alive_squares       
+    squares[:] = alive_squares 
+    
+def eating(squares:list[Square]):
+    for a , b in squares:
+        if check_collision(a,b) == True:
+            b.is_dead() 
+              
 
 def main() -> None:
     """Main game loop."""
